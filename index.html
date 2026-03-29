@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cysra Anome</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --accent: #00d4ff;
+            --accent-glow: rgba(0, 212, 255, 0.2);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f7;
+            --surface: #ffffff;
+            --glass: rgba(0, 0, 0, 0.02);
+            --border: rgba(0, 0, 0, 0.1);
+            --text-main: #000000;
+            --text-dim: #666666;
+            --accent: #0088cc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: crosshair;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            line-height: 1.6;
+            transition: background 0.4s ease;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 212, 255, 0.02) 50%);
+            background-size: 100% 4px;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 6%;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: -1px;
+        }
+
+        .logo span { color: var(--accent); }
+
+        .nav-items { display: flex; gap: 40px; }
+        .nav-items a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .nav-items a:hover { color: var(--accent); }
+
+        .theme-toggle {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        section {
+            min-height: 100vh;
+            padding: 140px 10% 60px;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 10vw, 7rem);
+            font-weight: 900;
+            line-height: 0.9;
+            margin-bottom: 30px;
+            letter-spacing: -4px;
+        }
+
+        .hero p {
+            max-width: 600px;
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 40px;
+            position: relative;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px -10px var(--accent-glow);
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: 0.4s;
+            transform-origin: left;
+        }
+
+        .card:hover::before { transform: scaleX(1); }
+
+        .card-tag {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .card p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .card-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-link.active::after {
+            content: "→";
+            transition: 0.3s;
+        }
+
+        .card-link.active:hover::after { transform: translateX(5px); }
+
+        .card.disabled-card {
+            opacity: 0.6;
+        }
+
+        .card.disabled-card:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: var(--border);
+        }
+
+        .card.disabled-card:hover::before {
+            transform: scaleX(0);
+        }
+
+        #serbet-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .overlay-header {
+            padding: 20px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #loader-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s infinite linear;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        #error-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 25px;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .about-content {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 60px;
+            border-radius: 2px;
+            max-width: 900px;
+        }
+
+        .about-content h2 {
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .nav-items { display: none; }
+            .hero h1 { font-size: 4rem; }
+            section { padding: 100px 5% 40px; }
+        }
+
+        .badge-callout {
+            display: inline-block;
+            background: var(--glass);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            margin-bottom: 30px;
+            border-radius: 2px;
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--accent);
+            color: #000;
+            padding: 15px 35px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: 0.3s;
+            border: 1px solid var(--accent);
+        }
+
+        .cta-button:hover {
+            background: transparent;
+            color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .preview-container {
+            margin-top: 60px;
+            width: 100%;
+            max-width: 1200px;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .preview-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+
+        .faq-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+
+        .faq-item:hover {
+            border-color: var(--accent);
+        }
+
+        .faq-item summary {
+            padding: 25px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--text-main);
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .faq-item summary::after {
+            content: "+";
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .faq-item[open] summary::after {
+            content: "-";
+        }
+
+        .faq-item p {
+            padding: 0 25px 25px;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 10%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+        }
+
+        footer p {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scanline"></div>
+
+    <nav>
+        <div class="logo">CYSRA<span>ANOME</span></div>
+        <div class="nav-items">
+            <a href="#features">Features</a>
+            <a href="#transparency">Transparency</a>
+            <a href="#feedback">Feedback</a>
+            <a href="#download">Downloads</a>
+            <a href="#faq">FAQ</a>
+        </div>
+        <button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'">TOGGLE THEME</button>
+    </nav>
+
+    <section class="hero">
+        <h1>Cysra Anome</h1>
+        <p>A lightweight, multi-process experience built for the modern web.</p>
+        
+        <div class="badge-callout">
+            Optimized Performance: Only 138MB RAM usage.
+        </div>
+        
+        <a href="https://github.com/muhabbetkusudayi/Cysra-Anome" class="cta-button">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12C2 16.418 4.865 20.166 8.839 21.49C9.339 21.58 9.52 21.27 9.52 21.002C9.52 20.762 9.511 19.952 9.506 18.882C6.726 19.486 6.14 17.697 6.14 17.697C5.685 16.543 5.029 16.236 5.029 16.236C4.122 15.616 5.097 15.628 5.097 15.628C6.101 15.698 6.629 16.658 6.629 16.658C7.521 18.188 8.969 17.745 9.541 17.487C9.632 16.837 9.892 16.395 10.181 16.143C7.962 15.891 5.631 15.033 5.631 11.236C5.631 10.155 6.016 9.271 6.643 8.583C6.542 8.331 6.204 7.323 6.74 5.952C6.74 5.952 7.564 5.688 9.502 6.999C10.285 6.781 11.123 6.672 11.956 6.668C12.788 6.672 13.626 6.781 14.411 6.999C16.347 5.688 17.17 5.952 17.17 5.952C17.708 7.323 17.371 8.331 17.27 8.583C17.898 9.271 18.281 10.155 18.281 11.236C18.281 15.044 15.945 15.888 13.718 16.136C14.079 16.447 14.402 17.062 14.402 18.012C14.402 19.375 14.39 20.474 14.39 20.803C14.39 21.077 14.568 21.396 15.08 21.296C19.123 20.158 22 16.417 22 12C22 6.477 17.523 2 12 2Z"/>
+            </svg>
+            View on GitHub
+        </a>
+
+        <div class="preview-container">
+            <img src="/photos/pre.png" alt="Cysra Anome Interface Preview">
+        </div>
+    </section>
+    <section id="transparency">
+        <div class="about-content">
+            <h2>OPEN SOURCE & TRANSPARENCY</h2>
+            <h3 style="font-size: 2rem; margin-bottom: 20px;">Built by the community, for the web.</h3>
+            <p style="color: var(--text-dim); font-size: 1.1rem;">Cysra Anome is 100% open-source software. We believe in total transparency, giving developers the power to audit our code, contribute to new features, and understand exactly how their data is handled. No hidden telemetry, no bloated tracking—just pure, optimized execution.</p>
+        </div>
+    </section>
+
+    <section id="features">
+        <h2 class="section-title">Usage Modes</h2>
+        <div class="grid">
+            <div class="card">
+                <span class="card-tag">CORE</span>
+                <h3>Standard Mode</h3>
+                <p>Enjoy a lightning-fast, distraction-free browsing experience utilizing our highly optimized multi-process architecture tailored for everyday use.</p>
+            </div>
+            <div class="card">
+                <span class="card-tag">ENGINEERING</span>
+                <h3>Developer Tools</h3>
+                <p>Unlock advanced inspection capabilities, deep DOM manipulation, and precise network monitoring designed specifically for engineers.</p>
+            </div>
+            <div class="card">
+                <span class="card-tag">SECURITY</span>
+                <h3>Privacy Focus</h3>
+                <p>Operate in strict isolation mode with enhanced tracker blocking, fingerprinting protection, and automated cache clearing.</p>
+                <a href="https://muhabbetkusudayi.github.io/legal.html" class="card-link active">Security Policies</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="feedback">
+        <h2 class="section-title">Community Feedback</h2>
+        <div class="grid">
+            <div class="card">
+                <span class="card-tag">SPEED</span>
+                <h3>"Unmatched Execution"</h3>
+                <p>"The multi-process architecture makes everything instantaneous. It feels incredibly snappy compared to everything else out there."</p>
+                <a href="#" class="card-link active">M. A.</a>
+            </div>
+            <div class="card">
+                <span class="card-tag">EFFICIENCY</span>
+                <h3>"138MB is Real"</h3>
+                <p>"I couldn't believe the RAM usage claims until I profiled it myself. Keeping a complex web app under 150MB is architectural magic."</p>
+                <a href="#" class="card-link active">J. S.</a>
+            </div>
+            <div class="card">
+                <span class="card-tag">DESIGN</span>
+                <h3>"Minimalist Perfection"</h3>
+                <p>"The glassmorphism aesthetic combined with the stark terminal-like inputs creates an environment I actually want to work in."</p>
+                <a href="#" class="card-link active">M.</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="download">
+        <h2 class="section-title">Downloads</h2>
+        <div class="grid">
+            <div class="card">
+                <span class="card-tag">SOURCE</span>
+                <h3>GitHub</h3>
+                <p>Works on every system that opens Python 3.4+. Access the full repository.</p>
+                <a href="https://github.com/muhabbetkusudayi/Cysra-Anome" class="card-link active" target="_blank">Download</a>
+            </div>
+            <div class="card">
+                <span class="card-tag">EXECUTABLE</span>
+                <h3>Windows</h3>
+                <p>Works natively on Windows 11, 10, and 8 environments.</p>
+                <a href="/files/CysraAnome.exe" class="card-link active" download>Download</a>
+            </div>
+            <div class="card disabled-card">
+                <span class="card-tag">UNAVAILABLE</span>
+                <h3>Linux</h3>
+                <p>There is no Cysra Anome for Linux, sorry. But just wait.</p>
+                <span class="card-link" style="color: var(--text-dim); cursor: not-allowed;">Coming Soon</span>
+            </div>
+            <div class="card disabled-card">
+                <span class="card-tag">IN DEVELOPMENT</span>
+                <h3>Android</h3>
+                <p>We're coding a .apk file for Android, sorry. But just wait.</p>
+                <span class="card-link" style="color: var(--text-dim); cursor: not-allowed;">Coming Soon</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" style="min-height: auto;">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <div style="max-width: 900px; margin-top: 40px;">
+            <details class="faq-item">
+                <summary>How do I install Cysra Anome?</summary>
+                <p>Installation is straightforward. You can pull the latest binary directly from our GitHub releases page or clone the repository and build it locally using our provided build scripts for Windows, macOS, or Linux.</p>
+            </details>
+            <details class="faq-item">
+                <summary>How does the multi-process architecture maintain low RAM usage?</summary>
+                <p>We utilize aggressive memory pooling and a custom garbage collection schedule that suspends inactive DOM elements. By isolating rendering processes from logic execution, we drop idle overhead significantly.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Is Cysra Anome safe?</summary>
+                <p>Yes. Cysra Anome is designed with security as a top priority. We implement robust sandboxing, regular security audits, and a transparent update mechanism to ensure your safety.</p>
+            </details>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Cysra Anome. All rights reserved.</p>
+        <p>Built with precision. <a href="https://github.com/muhabbetkusudayi/Cysra-Anome">GitHub Repository</a></p>
+    </footer>
+
+</body>
+</html>
